@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 104" role="img" aria-label="Kho Video">
+  <defs>
+    <linearGradient id="kvBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2E74F0"/>
+      <stop offset="1" stop-color="#1B4FD0"/>
+    </linearGradient>
+    <linearGradient id="kvBlue2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2A6BEA"/>
+      <stop offset="1" stop-color="#1D55D6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- thân máy quay -->
+  <rect x="14" y="17" width="76" height="70" rx="14" fill="url(#kvBlue)"/>
+  <!-- ống kính (hình thang bên phải) -->
+  <path d="M112 27 Q114 25.5 114 28 L114 76 Q114 78.5 112 77 L94 64 L94 40 Z" fill="url(#kvBlue2)"/>
+
+  <!-- nút play trắng -->
+  <path d="M62 38 L82 50.5 Q84.5 52 82 53.5 L62 66 Q59.5 67.5 59.5 64.5 L59.5 39.5 Q59.5 36.5 62 38 Z" fill="#fff"/>
+
+  <!-- ===== DẢI HOA VĂN THỔ CẨM (bên trái thân máy) ===== -->
+  <g fill="none" stroke="#fff" stroke-linejoin="miter">
+    <!-- bậc thang mép trái — trên -->
+    <path d="M14.5 41 L20 41 L20 34.5 L25.5 34.5 L25.5 28 L31 28 L31 21.5" stroke-width="3.2"/>
+    <!-- bậc thang mép trái — dưới -->
+    <path d="M14.5 63 L20 63 L20 69.5 L25.5 69.5 L25.5 76 L31 76 L31 82.5" stroke-width="3.2"/>
+    <!-- quả trám lớn -->
+    <path d="M33 37.5 L47.5 52 L33 66.5 L18.5 52 Z" stroke-width="3.2"/>
+    <!-- quả trám nhỏ -->
+    <path d="M33 44.5 L40.5 52 L33 59.5 L25.5 52 Z" stroke-width="2.8"/>
+  </g>
+  <!-- chấm trám đỏ ở tâm -->
+  <path d="M33 48.2 L36.8 52 L33 55.8 L29.2 52 Z" fill="#F4636E"/>
+</svg>

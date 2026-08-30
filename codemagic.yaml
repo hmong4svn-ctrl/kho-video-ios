@@ -1,0 +1,168 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# KHO VIDEO — iOS (Capacitor) · Codemagic
+#
+# Hoc tu ~/hmong-x-ios/codemagic.yaml (ban da len App Store 26/08/2026)
+# va tu so tay  .claude/skills/nop-app-store/SKILL.md
+#
+# 🔴 LUAT SO 1 (SKILL §2e): CHUNG CHI PHAN PHOI DA CHAM TRAN 3/3.
+#    Moi build KHONG co bien CERTIFICATE_PRIVATE_KEY se de them 1 chung chi moi
+#    -> Apple tu choi tao -> build chet, va con lam ban HMONG X cung kho ky lai.
+#    Vi vay workflow nay DUNG NGAY (exit 1) neu thieu bien do — co y, dung sua.
+#
+#    Aib dan DUNG CAI KHOA DA DUNG CHO HMONG X (file hmongx_cert_key) vao day,
+#    de Codemagic dung LAI chung chi cu chu khong de them cai moi.
+# ═══════════════════════════════════════════════════════════════════════════
+
+workflows:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1) KIEM TRA BIEN DICH — khong ky code, khong dung quota chung chi.
+  #    Chay cai nay TRUOC khi dung toi workflow nop.
+  # ───────────────────────────────────────────────────────────────────────────
+  ios-verify:
+    name: Kho Video iOS - kiem tra build
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Cai dat npm
+        script: npm install
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
+      - name: Kiem tra nhanh cau hinh
+        script: bash scripts/kiem-nhanh.sh
+      - name: Build iOS (khong ky - chi kiem tra bien dich)
+        script: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath ios/App/build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+    artifacts:
+      - ios/App/build/Build/Products/**/*.app
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2) NOP LEN TESTFLIGHT / APP STORE CONNECT
+  #
+  # TRUOC KHI CHAY, Aib phai xong 3 viec (xem DOC-CHO-AIB.md):
+  #   [ ] Tao App ID  com.hmongx.khovideo  trong Apple Developer
+  #   [ ] Tao app moi "Kho Video" trong App Store Connect -> lay Apple ID (10 chu so)
+  #       roi thay vao APP_STORE_APPLE_ID ben duoi
+  #   [ ] Dan bien CERTIFICATE_PRIVATE_KEY (noi dung file hmongx_cert_key) vao Codemagic
+  #
+  # Khoa App Store Connect API: DUNG LAI cai cua HMONG X, ten tich hop  hmongx-asc
+  # (mot khoa dung chung cho ca tai khoan Apple, KHONG can tao khoa moi).
+  # ───────────────────────────────────────────────────────────────────────────
+  ios-appstore:
+    name: Kho Video iOS - NOP APP STORE
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: hmongx-asc
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      # ⚠️ KHONG dung khoi "ios_signing:" (khoi ky code cua Codemagic) o day.
+      # Khoi do bat Codemagic di TIM provisioning profile CO SAN truoc khi chay script;
+      # bundle id moi thi chua co profile nao -> build chet ngay voi loi
+      # "No matching profiles found for bundle identifier ... and distribution type app_store".
+      # (Loi that da dinh voi HMONG X ngay 15/08/2026, build #1.)
+      # Thay vao do de buoc "Lay chung chi + profile ky code" ben duoi tu tao bang --create.
+      groups:
+        - ios_signing          # nhom BIEN MOI TRUONG chua CERTIFICATE_PRIVATE_KEY
+      vars:
+        BUNDLE_ID: "com.hmongx.khovideo"
+        # 👇 THAY SO NAY sau khi tao app trong App Store Connect. De nguyen CHUA_CO thi
+        #    buoc danh so build tu lui ve 1 (van chay duoc lan dau).
+        APP_STORE_APPLE_ID: "CHUA_CO"
+    scripts:
+      - name: Cai dat npm
+        script: npm install
+
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
+
+      - name: Kiem tra nhanh truoc khi ky (bat loi som, khoi ton 1 vong build)
+        script: bash scripts/kiem-nhanh.sh
+
+      - name: Lay chung chi + profile ky code
+        script: |
+          set -e
+          keychain initialize
+
+          # 🔴 SKILL §2e — CHUNG CHI PHAN PHOI DA HET CHO (3/3).
+          # Khong co khoa co dinh thi lenh ben duoi se di TAO chung chi moi -> chet.
+          if [ -z "$CERTIFICATE_PRIVATE_KEY" ]; then
+            echo "=============================================================="
+            echo "THIEU bien CERTIFICATE_PRIVATE_KEY."
+            echo "Chung chi phan phoi cua tai khoan Apple da dung 3/3 - het cho."
+            echo "Build tiep se de them chung chi moi va CHET."
+            echo ""
+            echo "Cach lam: Codemagic > App settings > Environment variables"
+            echo "  Group:   ios_signing"
+            echo "  Ten:     CERTIFICATE_PRIVATE_KEY"
+            echo "  Gia tri: TOAN BO noi dung file hmongx_cert_key (khoa da dung cho HMONG X)"
+            echo "  Tick:    Secure"
+            echo "=============================================================="
+            exit 1
+          fi
+
+          echo "$CERTIFICATE_PRIVATE_KEY" > /tmp/kv_cert_key
+          chmod 600 /tmp/kv_cert_key
+
+          # Chi LAY (fetch) profile cho bundle id moi. Chung chi thi dung lai cai cu,
+          # nhan ra nho khoa rieng o tren — KHONG tao chung chi moi.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key=@file:/tmp/kv_cert_key \
+            --create
+
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Danh so ban dung (build number) tang dan
+        script: |
+          if [ "$APP_STORE_APPLE_ID" = "CHUA_CO" ]; then
+            echo "Chua co Apple ID cua app - dat build number = 1"
+            BN=0
+          else
+            BN=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          fi
+          agvtool new-version -all $(($BN + 1))
+        working_directory: ios/App
+
+      - name: Build va xuat .ipa
+        script: |
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App \
+            --config Release
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - ios/App/build/Build/Products/**/*.dSYM.zip
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # BAT DAU bang TestFlight thoi — KHONG tu gui duyet ban public.
+        # ⚠️ SKILL: qua TestFlight KHONG co nghia la se qua App Store Review.
+        # Chay ngon roi, VA sau khi da giai xong Guideline 3.1.1 (IAP), moi doi
+        # submit_to_app_store: true.
+        submit_to_testflight: true
+        submit_to_app_store: false
+      email:
+        recipients:
+          - hmong4svn@gmail.com
+        notify:
+          success: true
+          failure: true

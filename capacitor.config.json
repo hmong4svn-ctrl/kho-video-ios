@@ -1,0 +1,35 @@
+{
+  "appId": "com.hmongx.khovideo",
+  "appName": "Kho Video",
+  "webDir": "www",
+  "server": {
+    "url": "https://video.hmongx.com/kho-video.html",
+    "cleartext": false,
+    "allowNavigation": [
+      "video.hmongx.com",
+      "hmongx.com",
+      "*.hmongx.com",
+      "accounts.google.com",
+      "*.google.com",
+      "*.facebook.com",
+      "connect.facebook.net",
+      "appleid.apple.com"
+    ]
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0B3E69",
+    "appendUserAgent": "KhoVideoiOS Capacitor"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#0B3E69",
+      "showSpinner": false,
+      "launchAutoHide": true
+    },
+    "Keyboard": {
+      "resize": "native"
+    }
+  }
+}

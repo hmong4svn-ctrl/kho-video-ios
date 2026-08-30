@@ -1,0 +1,71 @@
+#!/bin/bash
+# ─────────────────────────────────────────────────────────────────────────────
+# KIEM NHANH — chay tren may Aib TRUOC khi day len Codemagic, va Codemagic
+# cung chay lai buoc nay truoc khi ky code.
+# Bat 4 loi Apple da danh HMONG X that su, KHONG can build:
+#   1. sslip.io lot vao allowNavigation  -> chet dang nhap (SKILL §6c) -> Guideline 2.1
+#   2. Info.plist thieu quyen            -> CRASH khi bam chon video  -> Guideline 2.1(a)
+#   3. Icon con alpha / sai co           -> App Store tu choi goi nop
+#   4. appendUserAgent khong khop        -> trang khong biet dang chay trong app iOS
+# Chay:  bash scripts/kiem-nhanh.sh
+# ─────────────────────────────────────────────────────────────────────────────
+set -u
+cd "$(dirname "$0")/.."
+LOI=0
+bao_loi(){ echo "❌ $1"; LOI=1; }
+bao_dat(){ echo "✅ $1"; }
+
+CFG=capacitor.config.json
+PL=ios/App/App/Info.plist
+IC=ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+
+# 1) CUA THOAT dang nhap phai nam NGOAI allowNavigation
+#    Trang kho-video.html mo Safari that bang  https://video.152-42-172-109.sslip.io
+#    Neu ten mien do lot vao allowNavigation, Capacitor giu lai trong webview
+#    -> Google chan (disallowed_useragent) -> 3 nut dang nhap chet.
+if grep -q "sslip.io" "$CFG"; then
+  bao_loi "capacitor.config.json CO sslip.io trong allowNavigation - HONG CO CHE DANG NHAP"
+else
+  bao_dat "allowNavigation khong co sslip.io (cua thoat con nguyen)"
+fi
+
+# 2) Ba quyen bat buoc trong Info.plist
+for k in NSCameraUsageDescription NSPhotoLibraryUsageDescription NSMicrophoneUsageDescription; do
+  if /usr/libexec/PlistBuddy -c "Print :$k" "$PL" >/dev/null 2>&1; then
+    bao_dat "Info.plist co $k"
+  else
+    bao_loi "Info.plist THIEU $k  (app se CRASH = Guideline 2.1(a))"
+  fi
+done
+
+# 3) Icon: 1024x1024, khong alpha
+python3 -c "
+import sys
+from PIL import Image
+p='$IC'
+try:
+    im=Image.open(p)
+except Exception as e:
+    print('❌ Khong doc duoc icon:',e); sys.exit(1)
+bad=False
+if im.mode in ('RGBA','LA') or 'transparency' in im.info:
+    print('❌ Icon con kenh trong suot (alpha):',p); bad=True
+if im.size!=(1024,1024):
+    print('❌ Icon sai co:',im.size,'- phai la 1024x1024'); bad=True
+if not bad: print('✅ Icon 1024x1024, khong alpha')
+sys.exit(1 if bad else 0)
+" || LOI=1
+
+# 4) appendUserAgent phai chua 'HmongX' hoac 'Capacitor'
+#    kho-video.html:  laAppIOS() = /HmongX|Capacitor/i.test(navigator.userAgent)
+#    Khong khop thi trang tuong dang chay tren web -> dang nhap o lai trong webview.
+UA=$(python3 -c "import json;print(json.load(open('$CFG'))['ios'].get('appendUserAgent',''))")
+if echo "$UA" | grep -Eqi "HmongX|Capacitor"; then
+  bao_dat "appendUserAgent = '$UA' (khop laAppIOS)"
+else
+  bao_loi "appendUserAgent = '$UA' - KHONG khop /HmongX|Capacitor/i trong kho-video.html"
+fi
+
+echo
+if [ $LOI -eq 0 ]; then echo "🟢 KIEM NHANH: DAT"; else echo "🔴 KIEM NHANH: CO LOI - DUNG NOP"; fi
+exit $LOI
