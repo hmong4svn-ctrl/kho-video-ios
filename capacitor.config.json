@@ -7,8 +7,6 @@
     "cleartext": false,
     "allowNavigation": [
       "video.hmongx.com",
-      "hmongx.com",
-      "*.hmongx.com",
       "accounts.google.com",
       "*.google.com",
       "*.facebook.com",
@@ -18,13 +16,13 @@
   },
   "ios": {
     "contentInset": "always",
-    "backgroundColor": "#0B3E69",
+    "backgroundColor": "#F2FAFF",
     "appendUserAgent": "KhoVideoiOS Capacitor"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1200,
-      "backgroundColor": "#0B3E69",
+      "backgroundColor": "#F2FAFF",
       "showSpinner": false,
       "launchAutoHide": true
     },

@@ -1,0 +1,34 @@
+Kho Video is a Hmong-language video editing tool. The interface is in Hmong (RPA), so
+here is the exact path for each item App Review needs to check.
+
+HOW TO DELETE THE ACCOUNT (Guideline 5.1.1(v))
+1. Tap the account icon in the top-right corner of the home screen.
+2. Tap "Rho tawm account" (Delete Account) - it is the last item in that panel.
+3. Type RHO TAWM in the confirmation box, then confirm.
+The account and all of its videos are deleted immediately; no email request is needed.
+The same button is also reachable from the footer of the home screen.
+
+HOW TO REPORT CONTENT (Guideline 1.2)
+Tap the flag icon "Ceeb toom" (Report) in the footer of the home screen, choose a reason
+and submit. Reports reach our team and are handled within 24 hours.
+
+IN-APP PURCHASE (Guideline 3.1.1)
+The app sells two monthly subscriptions, both available through In-App Purchase:
+  com.hmongx.khovideo.pob1  - 100 edited videos per month, 720p export
+  com.hmongx.khovideo.pob2  - 200 edited videos per month, 1080p export
+Free users can edit 5 videos to try the app. Nothing is sold outside of In-App Purchase
+inside the iOS app.
+
+HOW TO TEST THE APP
+1. Sign in with Apple (or use the demo account below).
+2. On the home screen tap "Rho video tuaj" and pick any video from the photo library.
+3. Choose one of the three buttons, for example "Kho 1 zaj video".
+4. The app returns the edited video in about 10-30 seconds depending on length.
+
+SIGN-IN
+Sign in with Apple, Google and Facebook are all available. They open in Safari and return
+to the app automatically.
+
+LANGUAGE NOTE
+Hmong (RPA) has no App Store localization, so the interface is Hmong with Vietnamese
+subtitles in places. This is intentional - our users are Hmong speakers in Vietnam and Laos.

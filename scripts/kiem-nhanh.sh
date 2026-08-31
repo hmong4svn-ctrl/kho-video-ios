@@ -67,5 +67,34 @@ else
 fi
 
 echo
+
+
+# 🔴 THÊM 30/08/26 — CỬA THOÁT phải nằm NGOÀI allowNavigation.
+# Kho Video mượn cửa đăng nhập của app chính (biến CUA_THOAT trong kho-video.html). Nếu tên miền
+# đó lọt vào allowNavigation thì Capacitor giữ trong app ⇒ Google thấy webview nhúng ⇒ CHẶN
+# ⇒ đăng nhập chết. Suýt dính 30/08: dự án thêm hmongx.com vào danh sách, cùng ngày cửa thoát
+# lại đổi sang đúng hmongx.com.
+if python3 - <<'PYKIEM'
+import json, re, sys, urllib.request
+try:
+    rq = urllib.request.Request('https://video.hmongx.com/kho-video.html',
+        headers={'User-Agent': 'Mozilla/5.0', 'Cache-Control': 'no-cache'})   # Cloudflare chặn urllib trần (403)
+    h = urllib.request.urlopen(rq, timeout=15).read().decode('utf-8', 'replace')
+except Exception as e:
+    print('  (bỏ qua: không tải được trang —', str(e)[:40], ')'); sys.exit(0)
+m = re.search(r"CUA_THOAT\s*=\s*'https?://([^/']+)'", h)
+if not m: print('  (bỏ qua: không thấy CUA_THOAT)'); sys.exit(0)
+cua = m.group(1)
+ds = json.load(open('capacitor.config.json'))['server']['allowNavigation']
+xau = [x for x in ds if x == cua or (x.startswith('*.') and cua.endswith(x[1:]))]
+if xau:
+    print('  ❌ CUA THOAT (' + cua + ') LOT VAO allowNavigation qua: ' + ', '.join(xau))
+    print('     → dang nhap se CHET trong app iOS. Bo cac muc do khoi allowNavigation.')
+    sys.exit(1)
+print('  cua thoat (' + cua + ') nam NGOAI allowNavigation')
+sys.exit(0)
+PYKIEM
+then echo "✅ cua thoat nam ngoai allowNavigation"; else echo "❌ CUA THOAT LOT VAO allowNavigation"; LOI=1; fi
+
 if [ $LOI -eq 0 ]; then echo "🟢 KIEM NHANH: DAT"; else echo "🔴 KIEM NHANH: CO LOI - DUNG NOP"; fi
 exit $LOI
