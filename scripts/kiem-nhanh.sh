@@ -39,19 +39,29 @@ for k in NSCameraUsageDescription NSPhotoLibraryUsageDescription NSMicrophoneUsa
 done
 
 # 3) Icon: 1024x1024, khong alpha
+#    🔴 VA 01/09/26 — TRUOC DUNG `from PIL import Image` ⇒ BUILD CHET tren may Codemagic:
+#    "ModuleNotFoundError: No module named 'PIL'". May CI khong co Pillow, va cai them thi
+#    ton them ~30 giay moi build. Doc thang HEADER PNG bang `struct` — chi can thu vien
+#    co san cua Python, chay o dau cung duoc.
+#    Cach doc: PNG bat dau bang 8 byte dau nhan dang, roi chunk IHDR:
+#      byte 16-19 = chieu rong · 20-23 = chieu cao · 24 = do sau bit · 25 = kieu mau
+#    Kieu mau 4 = xam+alpha, 6 = RGB+alpha ⇒ CO alpha (Apple tu choi icon co alpha).
 python3 -c "
-import sys
-from PIL import Image
+import sys, struct
 p='$IC'
 try:
-    im=Image.open(p)
+    d=open(p,'rb').read(26)
 except Exception as e:
     print('❌ Khong doc duoc icon:',e); sys.exit(1)
+if d[:8] != b'\x89PNG\r\n\x1a\n':
+    print('❌ Icon khong phai PNG:',p); sys.exit(1)
+w,h = struct.unpack('>II', d[16:24])
+mau  = d[25]
 bad=False
-if im.mode in ('RGBA','LA') or 'transparency' in im.info:
+if mau in (4,6):
     print('❌ Icon con kenh trong suot (alpha):',p); bad=True
-if im.size!=(1024,1024):
-    print('❌ Icon sai co:',im.size,'- phai la 1024x1024'); bad=True
+if (w,h)!=(1024,1024):
+    print('❌ Icon sai co:',(w,h),'- phai la 1024x1024'); bad=True
 if not bad: print('✅ Icon 1024x1024, khong alpha')
 sys.exit(1 if bad else 0)
 " || LOI=1
