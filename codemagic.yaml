@@ -82,7 +82,7 @@ workflows:
         BUNDLE_ID: "com.hmongx.khovideo"
         # 👇 THAY SO NAY sau khi tao app trong App Store Connect. De nguyen CHUA_CO thi
         #    buoc danh so build tu lui ve 1 (van chay duoc lan dau).
-        APP_STORE_APPLE_ID: "CHUA_CO"
+        APP_STORE_APPLE_ID: "6806876361"
     scripts:
       - name: Cai dat npm
         script: npm install
@@ -98,32 +98,27 @@ workflows:
           set -e
           keychain initialize
 
-          # 🔴 SKILL §2e — CHUNG CHI PHAN PHOI DA HET CHO (3/3).
-          # Khong co khoa co dinh thi lenh ben duoi se di TAO chung chi moi -> chet.
-          if [ -z "$CERTIFICATE_PRIVATE_KEY" ]; then
-            echo "=============================================================="
-            echo "THIEU bien CERTIFICATE_PRIVATE_KEY."
-            echo "Chung chi phan phoi cua tai khoan Apple da dung 3/3 - het cho."
-            echo "Build tiep se de them chung chi moi va CHET."
-            echo ""
-            echo "Cach lam: Codemagic > App settings > Environment variables"
-            echo "  Group:   ios_signing"
-            echo "  Ten:     CERTIFICATE_PRIVATE_KEY"
-            echo "  Gia tri: TOAN BO noi dung file hmongx_cert_key (khoa da dung cho HMONG X)"
-            echo "  Tick:    Secure"
-            echo "=============================================================="
-            exit 1
+          # 🔑 CHUNG CHI PHAN PHOI — tran 3 cai moi tai khoan Apple.
+          # Co CERTIFICATE_PRIVATE_KEY  -> DUNG LAI chung chi cu, khong de them (nen lam).
+          # Khong co                    -> Codemagic TU TAO mot chung chi moi (an mat 1 cho).
+          #   Aib chot 01/09/2026: build ngay khong cho khoa. Da thu hoi UJTBFK46SG (15/08)
+          #   de lay cho, nen hien con 2/3. Chung chi 77S2V672KT + A827JFS622 la cua HMONG X,
+          #   TUYET DOI khong dung.
+          if [ -n "$CERTIFICATE_PRIVATE_KEY" ]; then
+            echo "✅ Co khoa co dinh - dung lai chung chi cu, khong de them cai moi."
+            echo "$CERTIFICATE_PRIVATE_KEY" > /tmp/kv_cert_key
+            chmod 600 /tmp/kv_cert_key
+            app-store-connect fetch-signing-files "$BUNDLE_ID" \
+              --type IOS_APP_STORE \
+              --certificate-key=@file:/tmp/kv_cert_key \
+              --create
+          else
+            echo "⚠️  KHONG co CERTIFICATE_PRIVATE_KEY - Codemagic se TU TAO chung chi moi."
+            echo "⚠️  Sau lan nay chung chi phan phoi se day 3/3 lai."
+            app-store-connect fetch-signing-files "$BUNDLE_ID" \
+              --type IOS_APP_STORE \
+              --create
           fi
-
-          echo "$CERTIFICATE_PRIVATE_KEY" > /tmp/kv_cert_key
-          chmod 600 /tmp/kv_cert_key
-
-          # Chi LAY (fetch) profile cho bundle id moi. Chung chi thi dung lai cai cu,
-          # nhan ra nho khoa rieng o tren — KHONG tao chung chi moi.
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --certificate-key=@file:/tmp/kv_cert_key \
-            --create
 
           keychain add-certificates
           xcode-project use-profiles
