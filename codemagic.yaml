@@ -113,10 +113,20 @@ workflows:
               --certificate-key=@file:/tmp/kv_cert_key \
               --create
           else
-            echo "⚠️  KHONG co CERTIFICATE_PRIVATE_KEY - Codemagic se TU TAO chung chi moi."
-            echo "⚠️  Sau lan nay chung chi phan phoi se day 3/3 lai."
+            # Khong co khoa dan san -> MAY BUILD TU SINH mot khoa tai cho.
+            # 🔴 Bat buoc phai co khoa: cong cu bao thang
+            #    "Cannot save Signing Certificates without certificate private key".
+            #    Chung chi moi tao cung can khoa rieng de ghep thanh bo ky (.p12).
+            # ⚠️ Khoa sinh o day CHET theo may build -> lan sau lai de them chung chi moi.
+            #    Muon thoi de them thi dan khoa co dinh vao bien CERTIFICATE_PRIVATE_KEY.
+            echo "⚠️  KHONG co CERTIFICATE_PRIVATE_KEY - tu sinh khoa tai cho."
+            echo "⚠️  Lan build nay se de them 1 chung chi moi (an mat 1 cho tren 3)."
+            openssl genrsa -traditional -out /tmp/kv_cert_key 2048 2>/dev/null \
+              || openssl genrsa -out /tmp/kv_cert_key 2048
+            chmod 600 /tmp/kv_cert_key
             app-store-connect fetch-signing-files "$BUNDLE_ID" \
               --type IOS_APP_STORE \
+              --certificate-key=@file:/tmp/kv_cert_key \
               --create
           fi
 
